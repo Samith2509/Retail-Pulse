@@ -24,8 +24,7 @@ Business Logic
 ↓
 Analytics & Reports
 
-yaml
-Copy code
+
 
 ### Design Principles
 - Raw data is never trusted
