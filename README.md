@@ -56,156 +56,181 @@ This ensures the pipeline is robust and production-ready.
 
 ---
 
-# ✅ CASE STUDY 1: Automated Data Ingestion & Quality Validation
+## Use Case 1: Automated Data Ingestion & Quality Validation Pipeline
 
-## 🎯 Objective
-Ensure that only **accurate, consistent, and reliable data** enters the analytics layer.
+### Goal
+Ensure that high-volume retail data is ingested reliably and validated for quality before it is used for analytics or business decisions.
 
----
+### Approach
 
-## 🔧 Solution Design
+#### Data Ingestion
+- Ingest raw CSV files for:
+  - Stores
+  - Products
+  - Customers
+  - Sales headers
+  - Sales line items
+- Load data into a **raw layer** without modification to preserve original data.
 
-### Raw Data Ingestion
-CSV files are generated with **intentional data issues** such as:
-- Duplicate IDs
-- Invalid categories or regions
-- Negative prices and quantities
-- Invalid transaction references
+#### Schema & Referential Validation
+- Verify mandatory fields (e.g., `product_id`, `store_id`, `transaction_id`).
+- Ensure foreign key relationships exist (e.g., product_id in sales must exist in products).
 
-This simulates real-world POS and upstream system failures.
+#### Business Rule Validation
+Check for invalid values such as:
+- Negative prices, quantities, or sales amounts
+- Invalid dates (future dates or malformed values)
+- Header totals not matching line-item totals
+- Invalid regions, categories, or promotion dates
 
----
+#### Data Segregation
+- **Valid records** → Move to a staging/clean layer
+- **Invalid records** → Move to a quarantine table with rejection reasons
 
-### Validation Rules
-Each dataset applies entity-specific validation rules:
-
-#### Stores
-- Duplicate `store_id`
-- Missing `store_name`
-- Invalid `store_region`
-- Invalid `opening_date`
-
-#### Products
-- Duplicate `product_id`
-- Invalid category
-- Negative price or stock
-
-#### Customers
-- Duplicate customer ID or email
-- Negative loyalty points
-- Invalid last purchase date
-
-#### Sales
-- Invalid store/product references
-- Negative transaction amounts
-- Invalid quantities
+### Outcome
+- Only clean, trusted data is allowed to flow downstream.
+- Bad data is preserved separately for auditing and reporting.
 
 ---
 
-### Staging & Quarantine Design
-- ✅ Valid records → `staging_*.csv`
-- ❌ Invalid records → `quarantine_*.csv`
-- Each rejected record includes an `error_reason`
+## Use Case 2: Real-Time Promotion Effectiveness Analyzer
 
-This ensures **auditability and traceability**, which is critical in enterprise systems.
+### Goal
+Identify which promotions actually drive sales and revenue growth.
 
----
+### Approach
 
-# 📊 CASE STUDY 2: Promotion Effectiveness Analysis
+#### Data Joining
+- Join clean sales line items with promotion details and product information.
 
-## 🎯 Objective
-Identify promotions that **genuinely increase sales and revenue**.
+#### Baseline vs Promoted Comparison
+Compare sales volume and revenue:
+- When a product is sold under a promotion
+- Versus when it is sold without a promotion
 
----
+#### Effectiveness Metrics
+Calculate:
+- Sales uplift percentage
+- Revenue growth per promotion
+- Performance by product category
 
-## 🔧 Solution Design
-- Uses only clean staging data
-- Joins sales with promotion and product data
-- Separates promoted vs non-promoted sales
-- Calculates:
-  - Sales lift percentage
-  - Revenue lift percentage
+#### Ranking & Reporting
+- Rank promotions by effectiveness.
+- Highlight **Top 3 promotions** that drive the highest sales uplift.
 
-### Business Output
-- Promotion effectiveness report
-- Top 3 promotions by sales lift
-
----
-
-# 🎁 CASE STUDY 3: Loyalty Point Calculation Engine
-
-## 🎯 Objective
-Accurately calculate and update customer loyalty points.
+### Outcome
+- Business teams can stop ineffective promotions.
+- Increased investment in high-impact promotions.
 
 ---
 
-## 🔧 Solution Design
-- Joins clean sales transactions with customer data
-- Applies rule-based loyalty calculations
-- Calculates points per transaction
-- Aggregates points at customer level
-- Updates customer loyalty balance
+## Use Case 3: Loyalty Point Calculation Engine
 
-This mirrors real retail loyalty systems.
+### Goal
+Accurately calculate and accrue loyalty points for customers after each transaction.
 
----
+### Approach
 
-# 🧠 CASE STUDY 4: Customer Segmentation
+#### Transaction Identification
+- Identify completed sales transactions from clean sales header data.
 
-## 🎯 Objective
-Segment customers for **targeted marketing and retention**.
+#### Customer & Rule Mapping
+- Join transactions with customer details.
+- Apply relevant loyalty rules based on spend amount, date, or special conditions.
 
----
+#### Points Calculation
+- Calculate base points (e.g., points per currency unit spent).
+- Apply bonus points for qualifying transactions (high spend, weekends, etc.).
 
-## 🔧 Solution Design
-Uses **RFM Analysis**:
-- **Recency**: Days since last purchase
-- **Frequency**: Number of transactions
-- **Monetary**: Total spend
+#### Balance Update
+- Add newly earned points to the customer’s total loyalty balance.
 
-### Segments Identified
-- High-Value Customers (Top spenders)
-- At-Risk Customers (Inactive but loyal)
+### Outcome
+- Loyalty points are calculated consistently and transparently.
+- Customers are rewarded accurately, improving trust and retention.
 
 ---
 
-# 📧 CASE STUDY 5: Loyalty Notification System
+## Use Case 4: Customer Segmentation for Targeted Offers
 
-## 🎯 Objective
-Notify customers when they earn loyalty points.
+### Goal
+Identify high-value and at-risk customers for personalized marketing.
+
+### Approach
+
+#### Sales Aggregation
+- Aggregate customer sales history from clean sales data.
+
+#### RFM Analysis
+Calculate:
+- **Recency**: How recently the customer purchased
+- **Frequency**: How often the customer purchases
+- **Monetary**: How much the customer spends
+
+#### Loyalty Signal Integration
+- Include current loyalty point balance as an additional indicator of engagement.
+
+#### Segment Creation
+- **High-Spenders**: Top customers by monetary value
+- **At-Risk Customers**: No recent purchases but still holding loyalty points
+
+### Outcome
+- Enables targeted marketing campaigns.
+- Higher conversion rates and reduced churn.
 
 ---
 
-## 🔧 Solution Design
-- Compares loyalty balance before and after transactions
-- Generates personalized messages
-- Simulates email notifications
+## Use Case 5: Automated Loyalty Notification System
 
-In real systems, this would be event-driven.
+### Goal
+Close the loyalty loop by informing customers about earned rewards.
+
+### Approach
+
+#### Trigger Identification
+- Detect customers whose loyalty points were updated in the latest run.
+
+#### Customer Communication Mapping
+- Retrieve customer email and loyalty details.
+
+#### Personalized Messageity Message Creation
+- Generate dynamic messages including:
+  - Points earned in the transaction
+  - Total loyalty balance
+  - Encouragement to shop again
+
+#### Notification Simulation
+- Simulate email delivery (or integrate with real email services in production systems).
+
+### Outcome
+- Customers feel acknowledged and rewarded.
+- Increased engagement and repeat purchases.
 
 ---
 
-# 📦 CASE STUDY 6: Inventory & Store Performance Analysis
+## Use Case 6: Inventory & Store Performance Correlation
 
-## 🎯 Objective
-Estimate **lost revenue caused by out-of-stock products**.
+### Goal
+Understand how inventory availability affects sales performance.
 
----
+### Approach
 
-## 🔧 Solution Design
-- Simulates daily inventory levels
-- Identifies top-selling products
-- Calculates out-of-stock days per store
-- Estimates lost revenue using:
-  
-Lost Revenue = Out-of-stock days × Avg daily sales × Unit price
+#### Inventory & Sales Integration
+- Join sales data with daily inventory levels by store and product.
 
-yaml
-Copy code
+#### Top Product Identification
+- Identify the top-selling products across all stores.
 
-### Business Output
-- Stores with highest lost revenue
-- Products causing maximum sales loss
+#### Out-of-Stock Analysis
+- Calculate how often these products were unavailable.
+- Measure lost sales opportunities due to stock-outs.
+
+#### Business Insight Generation
+- Estimate potential revenue lost because of inventory shortages.
+
+### Outcome
+- Data-driven inventory planning.
+- Reduced stock-outs and improved store performance.
 
 ---
 
