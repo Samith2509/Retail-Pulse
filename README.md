@@ -56,42 +56,87 @@ This ensures the pipeline is robust and production-ready.
 
 ---
 
-## Use Case 1: Automated Data Ingestion & Quality Validation Pipeline
+##  Use Case 1: Automated Data Ingestion & Quality Validation Pipeline
 
-### Goal
-Ensure that high-volume retail data is ingested reliably and validated for quality before it is used for analytics or business decisions.
-
-### Approach
-
-#### Data Ingestion
-- Ingest raw CSV files for:
-  - Stores
-  - Products
-  - Customers
-  - Sales headers
-  - Sales line items
-- Load data into a **raw layer** without modification to preserve original data.
-
-#### Schema & Referential Validation
-- Verify mandatory fields (e.g., `product_id`, `store_id`, `transaction_id`).
-- Ensure foreign key relationships exist (e.g., product_id in sales must exist in products).
-
-#### Business Rule Validation
-Check for invalid values such as:
-- Negative prices, quantities, or sales amounts
-- Invalid dates (future dates or malformed values)
-- Header totals not matching line-item totals
-- Invalid regions, categories, or promotion dates
-
-#### Data Segregation
-- **Valid records** → Move to a staging/clean layer
-- **Invalid records** → Move to a quarantine table with rejection reasons
-
-### Outcome
-- Only clean, trusted data is allowed to flow downstream.
-- Bad data is preserved separately for auditing and reporting.
+###  Goal  
+Ensure that **high-volume retail data** is ingested reliably and **validated for quality** before it is used for analytics or business decisions.
 
 ---
+
+### 🔧 Approach  
+
+#### Raw Data Ingestion
+- Raw CSV files are generated and ingested for:
+  - Stores  
+  - Products  
+  - Customers  
+  - Sales headers  
+  - Sales line items  
+- Data is loaded into a **raw (untrusted) layer without modification** to preserve original records.
+
+To simulate real-world retail environments, the raw data intentionally contains:
+- Duplicate IDs  
+- Invalid categories or store regions  
+- Negative prices and quantities  
+- Invalid transaction or reference IDs  
+
+This mirrors **POS failures, upstream system issues, and manual data errors** commonly seen in enterprise systems.
+
+---
+
+#### Schema & Referential Validation
+- Verify mandatory fields such as:
+  - `store_id`, `product_id`, `transaction_id`
+- Enforce foreign key relationships:
+  - `product_id` in sales must exist in the products dataset
+  - `store_id` in sales must exist in the stores dataset
+
+---
+
+#### Entity-Specific Business Rule Validation
+
+**Stores**
+- Duplicate `store_id`
+- Missing `store_name`
+- Invalid `store_region`
+- Invalid `opening_date`
+
+**Products**
+- Duplicate `product_id`
+- Invalid product category
+- Negative price or stock quantity
+
+**Customers**
+- Duplicate customer ID or email
+- Negative loyalty points
+- Invalid last purchase date
+
+**Sales**
+- Invalid store or product references
+- Negative transaction amounts
+- Invalid quantities
+
+These checks ensure both **technical correctness and business consistency**.
+
+---
+
+#### Staging & Quarantine Design
+- ✅ **Valid records** → `staging_*.csv` (Clean Layer)  
+- ❌ **Invalid records** → `quarantine_*.csv`  
+
+Each rejected record includes:
+- `error_reason`
+- Original data values for full traceability
+
+This design guarantees **auditability, transparency, and compliance**, which are critical in enterprise data pipelines.
+
+---
+
+###  Outcome
+- Only **clean, trusted data** flows into downstream analytics and reporting
+- Invalid data is **quarantined, not deleted**, enabling audits and root-cause analysis
+- Establishes a strong **data quality foundation** for all subsequent use cases
+
 
 ## Use Case 2: Real-Time Promotion Effectiveness Analyzer
 
